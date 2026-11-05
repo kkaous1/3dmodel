@@ -1,0 +1,680 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>무축 스크류 각도 실험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 왼쪽 = 실험 조건과 결과(실험 노트처럼), 오른쪽 = 세 각도 관을 나란히 놓은 3D 실험대 + 아래 회전수-효율 그래프 */
+:root {
+  --bg: #eef1f3;
+  --panel: #f8fafb;
+  --ink: #18222b;
+  --muted: #5b6873;
+  --line: #d3dade;
+  --accent: #b8235a;
+  --view: #e4e9ec;
+  --chip: #ffffff;
+  --a90: #6a2fa0;
+  --a60: #2f7fc4;
+  --a45: #d9782a;
+  --good: #2e7d4f;
+  --warn: #b7791f;
+  --bad: #c0392b;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11171c; --panel: #172028; --ink: #e5ebef; --muted: #93a1ac; --line: #2a3640;
+  --accent: #e85a8d; --view: #1b252d; --chip: #1f2a33;
+  --a90: #b48ae6; --a60: #6fb0e8; --a45: #f0a35e; --good: #5cc28a; --warn: #e2b04a; --bad: #ef7a6c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11171c; --panel: #172028; --ink: #e5ebef; --muted: #93a1ac; --line: #2a3640;
+  --accent: #e85a8d; --view: #1b252d; --chip: #1f2a33;
+  --a90: #b48ae6; --a60: #6fb0e8; --a45: #f0a35e; --good: #5cc28a; --warn: #e2b04a; --bad: #ef7a6c; color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; }
+.app { height: 100%; display: grid; grid-template-columns: 360px 1fr; }
+aside {
+  background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto;
+  padding-block: 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 16px;
+  display: flex; flex-direction: column; gap: 18px; min-width: 0;
+}
+aside > * { flex: none; }
+h1 { font-size: 19px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
+.ver { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: .04em; }
+section { display: flex; flex-direction: column; gap: 8px; }
+.lbl { font-size: 11px; letter-spacing: .08em; color: var(--muted); font-weight: 500; }
+button, select {
+  font: inherit; font-size: 12.5px; color: var(--ink); background: var(--chip);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 6px; cursor: pointer;
+}
+button:hover, select:hover { border-color: var(--muted); }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; align-items: center; gap: 8px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.big { font-family: var(--font-mono); font-size: 26px; font-weight: 500; }
+.res { display: flex; flex-direction: column; gap: 6px; }
+.rc { display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; }
+.ang { font-family: var(--font-mono); font-weight: 500; font-size: 18px; }
+.rc .meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); line-height: 1.4; }
+.pill { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; border: 1.5px solid currentColor; }
+.s-good { color: var(--good); } .s-warn { color: var(--warn); } .s-bad { color: var(--bad); } .s-wait { color: var(--muted); }
+.note { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+.spec { font-size: 12px; color: var(--muted); line-height: 1.5; font-family: var(--font-mono); }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-weight: 700; font-size: 13px; }
+details ul { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+details li.no { color: var(--muted); }
+.main { display: grid; grid-template-rows: 1fr auto; min-width: 0; min-height: 0; }
+.stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--view); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.tlabel { position: absolute; transform: translate(-50%, -100%); text-align: center; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tlabel .a { font-family: var(--font-mono); font-weight: 500; font-size: 15px; background: var(--panel); padding: 2px 8px; border-radius: 6px; }
+.tlabel .pill { background: var(--panel); }
+.tlabel .cnt { font-size: 11.5px; color: var(--muted); background: var(--panel); padding: 1px 6px; border-radius: 4px; }
+.hint { position: absolute; left: 12px; bottom: 12px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 6px 10px; border-radius: 6px; }
+.slowtag { position: absolute; right: 12px; top: 12px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 6px 10px; border-radius: 6px; text-align: right; line-height: 1.5; }
+.chart { background: var(--panel); border-top: 1px solid var(--line); padding: 12px max(16px, env(safe-area-inset-right, 0px)) 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.chart h2 { font-size: 13.5px; margin: 0; display: flex; gap: 10px; align-items: baseline; }
+.chart h2 .prog { font-weight: 400; font-size: 12px; color: var(--muted); }
+.chart .cap { font-size: 12px; color: var(--muted); }
+.chartbox { overflow-x: auto; }
+svg text { font-family: var(--font-body); }
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { grid-template-columns: 1fr; height: auto; }
+  .main { order: -1; }
+  .stage { height: 58vh; }
+  aside { border-right: 0; border-top: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+</style>
+
+<div class="app">
+  <aside>
+    <div>
+      <div class="ver">공학설계입문 6조 · 수직 인양 검토 v2</div>
+      <h1>무축 스크류 각도 실험</h1>
+      <div class="sub">같은 스크류를 90° · 60° · 45°로 세운 관 세 개에 같은 쓰레기를 넣고 비교한다. 쓰레기 조각과 관 벽 · 날개 · 리브 · 바닥의 접촉, 마찰, 물의 힘을 매 0.1 ms마다 계산하는 입자 모델. 1/4 모형(관 내경 34, 길이 200, 스크류 D32 · d10 · 피치 24) 기준.</div>
+    </div>
+
+    <section>
+      <div class="lbl">회전수</div>
+      <div class="row"><span class="big" id="rpm-v">200</span><span class="note">rpm</span></div>
+      <input type="range" id="rpm" min="0" max="600" step="10" value="200" aria-label="회전수">
+      <div class="row note"><span>0</span><span style="flex:1"></span><span>모형 모터 약 400</span><span style="flex:1"></span><span>600</span></div>
+    </section>
+
+    <section>
+      <div class="lbl">관 안의 상태</div>
+      <div class="seg3">
+        <button id="m-air" data-mode="air" aria-pressed="true">공기만</button>
+        <button id="m-mixed" data-mode="mixed" aria-pressed="false">물 + 공기</button>
+        <button id="m-water" data-mode="water" aria-pressed="false">물만</button>
+      </div>
+      <p class="note" id="mode-note"></p>
+    </section>
+
+    <section>
+      <div class="lbl">쓰레기 종류</div>
+      <select id="debris" aria-label="쓰레기 종류"></select>
+      <div class="spec" id="dspec"></div>
+    </section>
+
+    <section>
+      <div class="lbl">관 안쪽 세로 리브 3줄 (높이 2 mm)</div>
+      <div class="seg">
+        <button id="r-off" aria-pressed="true">없음</button>
+        <button id="r-on" aria-pressed="false">있음</button>
+      </div>
+      <p class="note">리브를 넣으면 날개가 리브에 닿지 않게 스크류 지름을 32 → 29.6 mm로 줄인다.</p>
+    </section>
+
+    <section>
+      <div class="lbl">날개 표면 (3D 출력 PLA)</div>
+      <div class="seg">
+        <button id="f-raw" aria-pressed="true">출력 그대로</button>
+        <button id="f-smooth" aria-pressed="false">매끈하게 (사포·코팅)</button>
+      </div>
+      <div class="lbl">관 안쪽 벽 (아크릴)</div>
+      <div class="seg">
+        <button id="w-raw" aria-pressed="true">아크릴 그대로</button>
+        <button id="w-rough" aria-pressed="false">거칠게 (사포)</button>
+      </div>
+      <p class="note">쓰레기가 날개보다 관 벽에 더 세게 붙잡혀야 올라간다. 날개 마찰 × 0.6, 벽 마찰 × 1.4로 계산한다.</p>
+    </section>
+
+    <section>
+      <div class="lbl">결과 · 바닥에서 넣은 조각 3개가 200 mm 관을 다 올라갔는지</div>
+      <div class="res" id="res"></div>
+      <p class="note" id="explain"></p>
+    </section>
+
+    <section>
+      <div class="lbl">화면 속도</div>
+      <div class="seg3">
+        <button data-slow="0.05">1/20</button>
+        <button data-slow="0.1" aria-pressed="true">1/10</button>
+        <button data-slow="0.25">1/4</button>
+      </div>
+    </section>
+
+    <details>
+      <summary>이 모델에 들어간 물리 · 빠진 물리</summary>
+      <ul>
+        <li>중력, 부력, 덧붙은 질량(물속에서 함께 움직이는 물의 질량)</li>
+        <li>관 벽 · 나선 날개 윗면과 아랫면 · 리브 · 바닥과의 접촉 (스프링-댐퍼)</li>
+        <li>정지 마찰과 운동 마찰 구분 (멈춰 있으면 더 큰 힘이 있어야 미끄러짐), 날개·벽 표면에 따른 마찰 차이</li>
+        <li>납작한 조각은 관 둘레 방향으로 누워, 폭의 절반만큼 떨어진 모서리가 벽에 닿음</li>
+        <li>스크류를 따라 도는 물·공기(물 40%, 공기 15% 속도 가정)와 그 압력 기울기</li>
+        <li>속도 제곱에 비례하는 유체 저항 + 점성 저항</li>
+        <li>가운데 구멍(d10)보다 작은 조각은 구멍으로 떨어질 수 있음</li>
+        <li>수면 위아래에서 물·공기 성질이 바뀜 (물 + 공기 모드)</li>
+        <li>조각끼리 부딪힘 (3D 화면)</li>
+        <li class="no">빠진 것: 조각의 구름·뒤집힘, 비닐이 접히고 감기는 변형, 실제 물 흐름(CFD), 조각이 많이 쌓여 서로 밀어 올리는 효과</li>
+        <li class="no">마찰계수와 물이 도는 속도는 문헌을 참고한 가정값이다. 숫자보다 각도 · 회전수 · 리브에 따른 경향을 보고, 최종 판단은 실물 실험으로 한다.</li>
+      </ul>
+    </details>
+  </aside>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <canvas id="c"></canvas>
+      <div id="labels"></div>
+      <div class="slowtag" id="slowtag">화면은 실제의 1/10 속도</div>
+      <div class="hint">드래그 회전 · 휠/핀치 확대</div>
+    </div>
+    <div class="chart">
+      <h2>회전수에 따른 상승 효율 <span class="prog" id="prog"></span></h2>
+      <div class="cap">이론 최대(날개가 쓰레기를 전혀 돌리지 않을 때) 대비 평균 상승 속도. 속이 빈 점은 5초 안에 꼭대기까지 못 올라간 경우.</div>
+      <div class="chartbox"><svg id="chart" width="100%" height="200" role="img" aria-label="회전수 0~600 rpm에서 90°, 60°, 45° 관의 상승 효율 그래프"></svg></div>
+    </div>
+  </div>
+</div>
+
+<script id="simsrc">
+// ===== 무축 스크류 쓰레기 인양 — 3D 입자 접촉 모델 (단위 m, s, kg) =====
+// 관 좌표계: X = 관 단면의 '아래' 방향, Y = 옆, Z = 관 축(위쪽). 관 바닥 Z = 0.
+// 접촉: 관 벽, 나선 날개(윗면·아랫면, 회전), 세로 리브, 바닥판 — 스프링-댐퍼 + 정지/운동 마찰
+// 유체: 부력, 회전하는 유체의 압력 기울기, 덧붙은 질량, 이차 저항 + 점성 저항
+var SIM = (function () {
+  var TAU = 2 * Math.PI;
+  var DEB = {
+    leaf: { name: "젖은 낙엽",   dims: [14, 10, 0.5], rho: 1100, a: 1.5, cd: 1.2, muW: [0.55, 0.42], muF: [0.6, 0.45], color: 0x4a2f12 },
+    butt: { name: "젖은 꽁초",   dims: [6, 2, 2],     rho: 1080, a: 1.0, cd: 1.0, muW: [0.35, 0.25], muF: [0.4, 0.3],  color: 0x8a4b1c },
+    pet:  { name: "페트 조각",   dims: [10, 8, 0.3],  rho: 1380, a: 1.0, cd: 1.2, muW: [0.4, 0.3],   muF: [0.4, 0.3],  color: 0x1f6fb2 },
+    sand: { name: "자갈·모래",   dims: [3, 3, 3],     rho: 2650, a: 1.5, cd: 0.5, muW: [0.6, 0.5],   muF: [0.6, 0.5],  color: 0x5a4a2c, sphere: true },
+    film: { name: "젖은 비닐",   dims: [15, 12, 0.05],rho: 920,  a: 1.0, cd: 1.3, muW: [0.7, 0.55],  muF: [0.65, 0.5], color: 0x1c8c80 },
+  };
+  // 유도값: 부피, 질량, 투영면적, 가장 긴 길이
+  for (var k in DEB) {
+    var d = DEB[k], s = d.dims;
+    d.V = d.sphere ? (Math.PI / 6) * Math.pow(s[0] * 1e-3, 3) : s[0] * s[1] * s[2] * 1e-9;
+    if (k === "butt") d.V = Math.PI * 1e-6 * 6e-3;
+    d.m = d.V * d.rho;
+    d.A = d.sphere ? Math.PI / 4 * Math.pow(s[0] * 1e-3, 2) : 0.6 * s[0] * s[1] * 1e-6;
+    d.Lmax = Math.max(s[0], s[1], s[2]) * 1e-3;
+    d.deq = Math.cbrt(6 * d.V / Math.PI);
+    d.a *= 1e-3;
+    d.aW = d.sphere ? d.a : Math.max(d.a, 0.5 * Math.min(s[0], s[1]) * 1e-3);   // 벽 접촉 거리
+  }
+  var GEO = { RI: 0.017, ro: 0.016, ri: 0.005, p: 0.024, t: 0.0024, L: 0.2, ribH: 0.002, ribW: 0.002, nRib: 3 };
+  var FLUID = { air: { rho: 1.2, mu: 1.8e-5, swirl: 0.15 }, water: { rho: 1000, mu: 1.0e-3, swirl: 0.4 } };
+  var WN = 1500, ZETA = 0.5;     // 접촉 고유진동수(rad/s), 감쇠비
+  function wrap(a) { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; }
+  function muOf(pair, vt, mul) { // 정지 → 운동 마찰 (스트라이벡 형태) × 표면 배율
+    return (pair[1] + (pair[0] - pair[1]) * Math.exp(-vt / 0.004)) * mul;
+  }
+  // 접촉 하나: 법선 n(단위), 침투 delta, 상대속도 rel → 가속도 누적
+  function contact(acc, nx, ny, nz, delta, rx, ry, rz, mu, mEff, m, mul) {
+    var vn = rx * nx + ry * ny + rz * nz;
+    var N = m * (WN * WN * delta - 2 * ZETA * WN * vn);   // 힘
+    if (N <= 0) return 0;
+    var tx = rx - vn * nx, ty = ry - vn * ny, tz = rz - vn * nz;
+    var vt = Math.sqrt(tx * tx + ty * ty + tz * tz);
+    var f = muOf(mu, vt, mul == null ? 1 : mul) * N / Math.sqrt(vt * vt + 1e-8);
+    acc[0] += (N * nx - f * tx) / mEff; acc[1] += (N * ny - f * ty) / mEff; acc[2] += (N * nz - f * tz) / mEff;
+    return N;
+  }
+  // P: { deb, beta(rad), omega(rad/s), mode:'air'|'water'|'mixed', ribs:bool, level(m, 관 바닥 기준 세계 높이) }
+  function inWater(P, x, z) {
+    if (P.mode === "water") return true;
+    if (P.mode === "air") return false;
+    // 세계 높이 = z·sinβ − x·cosβ  (X가 '아래' 방향)
+    return z * Math.sin(P.beta) - x * Math.cos(P.beta) < P.level;
+  }
+  // 입자 상태 s: {x,y,z,vx,vy,vz}, phi: 스크류 회전각
+  function accel(s, P, phi, acc) {
+    var d = P.deb, G = GEO, g = 9.81;
+    var ro = P.ribs ? G.RI - G.ribH - 0.0002 : G.ro;
+    var wet = inWater(P, s.x, s.z), F = wet ? FLUID.water : FLUID.air;
+    var mA = 0.5 * F.rho * d.V, mEff = d.m + mA;
+    var r = Math.sqrt(s.x * s.x + s.y * s.y) + 1e-9, cx = s.x / r, cy = s.y / r;   // r̂
+    var tx = -cy, ty = cx;                                                         // θ̂
+    var th = Math.atan2(s.y, s.x), w = P.omega;
+    acc[0] = 0; acc[1] = 0; acc[2] = 0;
+    // 중력 + 부력: 관 좌표에서 g = (cosβ, 0, −sinβ)·g
+    var gx = g * Math.cos(P.beta), gz = -g * Math.sin(P.beta);
+    var net = (d.m - F.rho * d.V) / mEff;
+    acc[0] += gx * net; acc[2] += gz * net;
+    // 유체: 스크류를 따라 도는 유체 (강체 회전 근사)
+    var Of = F.swirl * w;
+    var ufx = -Of * s.y, ufy = Of * s.x;
+    // 회전 유체의 압력 기울기 (안쪽으로 당김)
+    var pg = F.rho * d.V * 1.5 * Of * Of * r / mEff;
+    acc[0] -= pg * cx; acc[1] -= pg * cy;
+    // 저항: 이차 + 점성
+    var ux = s.vx - ufx, uy = s.vy - ufy, uz = s.vz, um = Math.sqrt(ux * ux + uy * uy + uz * uz);
+    var cq = 0.5 * F.rho * d.cd * d.A * um + 3 * Math.PI * F.mu * d.deq;
+    acc[0] -= cq * ux / mEff; acc[1] -= cq * uy / mEff; acc[2] -= cq * uz / mEff;
+    // 관 벽 (납작한 조각은 둘레 방향으로 눕고, 폭의 절반만큼 떨어져 모서리가 벽에 닿는다)
+    var aW = d.aW;
+    var dW = r + aW - G.RI;
+    if (dW > 0) contact(acc, -cx, -cy, 0, dW, s.vx, s.vy, s.vz, d.muW, mEff, d.m, P.wMul);
+    // 리브 (관에 고정)
+    if (P.ribs && r + aW > G.RI - G.ribH) {
+      for (var k = 0; k < G.nRib; k++) {
+        var tk = 0.5 + k * TAU / G.nRib, sep = r * wrap(th - tk);
+        var dR = G.ribW / 2 + d.a - Math.abs(sep);
+        if (dR > 0) { var sg = sep > 0 ? 1 : -1; contact(acc, sg * tx, sg * ty, 0, dR, s.vx, s.vy, s.vz, d.muW, mEff, d.m, P.wMul); }
+      }
+    }
+    // 바닥판
+    if (s.z < d.a) contact(acc, 0, 0, 1, d.a - s.z, s.vx, s.vy, s.vz, d.muF, mEff, d.m);
+    // 나선 날개: 면 높이 zf = p/(2π)(φ − θ) + n·p
+    var holeOK = d.Lmax < 2 * G.ri;                       // 가운데 구멍을 지날 수 있는 크기인가
+    var rIn = holeOK ? G.ri : 0;
+    var reach = Math.max(aW, 0.35 * d.Lmax);              // 납작한 조각은 면적만큼 날개에 걸친다
+    if (r < ro + reach && r > rIn - (holeOK ? d.a : 1)) {
+      var zf0 = G.p / TAU * (phi - th);
+      var h = s.z - zf0; h = h - Math.floor(h / G.p) * G.p;  // [0,p)
+      var zf = s.z - h;
+      if (h > G.p / 2) { h -= G.p; zf += G.p; }
+      if (zf > -G.t / 2) {
+        var rs = Math.max(r, 0.004), tanA = G.p / (TAU * rs), cosA = 1 / Math.sqrt(1 + tanA * tanA);
+        var dF = G.t / 2 + d.a - Math.abs(h) * cosA;
+        if (dF > 0) {
+          var sgn = h >= 0 ? 1 : -1;
+          // 법선 (r̂, θ̂, ẑ) = (0, tanA, 1)·cosA → 데카르트
+          var nx = sgn * tanA * cosA * tx, ny = sgn * tanA * cosA * ty, nz = sgn * cosA;
+          var fvx = -w * s.y, fvy = w * s.x;               // 날개 표면 속도 = ω r θ̂
+          contact(acc, nx, ny, nz, dF, s.vx - fvx, s.vy - fvy, s.vz, d.muF, mEff, d.m, P.fMul);
+        }
+      }
+    }
+    return wet;
+  }
+  // 입자끼리 충돌 (애니메이션용)
+  function pairs(list, accs, P) {
+    var d = P.deb, rc = Math.max(d.a, d.Lmax / 4), m = d.m;
+    for (var i = 0; i < list.length; i++) for (var j = i + 1; j < list.length; j++) {
+      var a = list[i], b = list[j];
+      var dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, dist = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-9;
+      var del = 2 * rc - dist; if (del <= 0) continue;
+      var nx = dx / dist, ny = dy / dist, nz = dz / dist;
+      var vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny + (b.vz - a.vz) * nz;
+      var f = Math.max(0, WN * WN * del - 2 * ZETA * WN * vn) * 0.5;
+      accs[i][0] -= f * nx; accs[i][1] -= f * ny; accs[i][2] -= f * nz;
+      accs[j][0] += f * nx; accs[j][1] += f * ny; accs[j][2] += f * nz;
+    }
+  }
+  function spawn(P, ang, frac) { // 관 바닥에 정지 상태로 넣기. frac: 0 = 날개 가운데쪽, 1 = 관 벽
+    var d = P.deb, rMin = GEO.ri + 0.002, rMax = GEO.RI - d.aW - 0.0005;
+    var rr = rMin + (rMax - rMin) * (frac == null ? 1 : frac), a = ang || 0;
+    return { x: rr * Math.cos(a), y: rr * Math.sin(a), z: d.a + 0.0005, vx: 0, vy: 0, vz: 0 };
+  }
+  var DT = 1e-4;
+  function stepAll(list, P, phi, dt) {
+    var accs = list.map(function () { return [0, 0, 0]; });
+    for (var i = 0; i < list.length; i++) list[i].wet = accel(list[i], P, phi, accs[i]);
+    if (list.length > 1) pairs(list, accs, P);
+    for (var i2 = 0; i2 < list.length; i2++) {
+      var s = list[i2], a = accs[i2];
+      s.vx += a[0] * dt; s.vy += a[1] * dt; s.vz += a[2] * dt;
+      s.x += s.vx * dt; s.y += s.vy * dt; s.z += s.vz * dt;
+    }
+  }
+  // 한 번 실험: 바닥에서 넣고 꼭대기(L − 6 mm)까지 걸린 시간
+  function trial(P, ang, Tmax, frac) {
+    var s = spawn(P, ang, frac), list = [s], phi = 0, t = 0, top = GEO.L - 0.006, zmax = s.z, acc = [0, 0, 0];
+    Tmax = Tmax || 5;
+    while (t < Tmax) {
+      s.wet = accel(s, P, phi, acc);
+      s.vx += acc[0] * DT; s.vy += acc[1] * DT; s.vz += acc[2] * DT;
+      s.x += s.vx * DT; s.y += s.vy * DT; s.z += s.vz * DT;
+      phi += P.omega * DT; t += DT;
+      if (s.z > zmax) zmax = s.z;
+      if (s.z >= top) return { reached: true, t: t, zmax: zmax, zEnd: s.z };
+      if (!isFinite(s.z)) break;
+    }
+    return { reached: false, t: Tmax, zmax: zmax, zEnd: s.z };
+  }
+  function evaluate(P, nTrials) {
+    nTrials = nTrials || 3;
+    var vmax = GEO.p * P.omega / TAU, res = [], reached = 0, sumEta = 0, zmax = 0;
+    if (P.omega <= 0) return { eta: 0, reached: 0, n: nTrials, zmax: 0 };
+    for (var i = 0; i < nTrials; i++) {
+      var r = trial(P, (i - (nTrials - 1) / 2) * 0.5, 5, nTrials > 1 ? i / (nTrials - 1) : 0.5);   // 가운데쪽~벽쪽 고르게
+      var dist = (r.reached ? GEO.L - 0.006 : Math.max(0, r.zEnd)) - P.deb.a;
+      sumEta += (dist / r.t) / vmax; if (r.reached) reached++; zmax = Math.max(zmax, r.zmax);
+    }
+    return { eta: sumEta / nTrials, reached: reached, n: nTrials, zmax: zmax };
+  }
+  return { DEB: DEB, GEO: GEO, DT: DT, accel: accel, stepAll: stepAll, spawn: spawn, trial: trial, evaluate: evaluate, wrap: wrap };
+})();
+if (typeof module !== "undefined") module.exports = SIM;
+
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const ANG = [90, 60, 45], COLV = ["--a90", "--a60", "--a45"];
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const state = { rpm: 200, mode: "air", debris: "leaf", ribs: false, slow: 0.1, fMul: 1, wMul: 1 };
+const LEVEL = 0.08;   // 물 + 공기: 관 바닥에서 높이 80 mm까지 물
+const P = (deg) => ({ deb: SIM.DEB[state.debris], beta: deg * Math.PI / 180, omega: state.rpm * 2 * Math.PI / 60, mode: state.mode, ribs: state.ribs, level: LEVEL, fMul: state.fMul, wMul: state.wMul });
+const MODE_NOTE = {
+  air: "물 밖 구간(수면 위 ~ 수거함). 실제 장치에서 가장 어려운 구간.",
+  mixed: "실제 배치처럼 관 아래 80 mm(높이 기준)는 물, 그 위는 공기. 조각이 수면을 지나며 조건이 바뀐다.",
+  water: "관 전체가 물에 잠긴 경우. 부력과 물의 회전이 함께 작용한다.",
+};
+
+// ================= 상태 판정 =================
+function status(r) {
+  if (!r) return ["계산 중", "s-wait"];
+  if (r.reached === r.n && r.eta >= 0.3) return ["잘 올라감", "s-good"];
+  if (r.reached > 0) return [r.reached === r.n ? "느리게 올라감" : `${r.reached}/${r.n}개만`, "s-warn"];
+  if (r.zmax > 0.06) return ["중간에서 맴돎", "s-bad"];
+  return ["못 올라감", "s-bad"];
+}
+
+// ================= 백그라운드 계산 (Web Worker) =================
+const simSrc = document.getElementById("simsrc").textContent;
+const workerSrc = simSrc + `
+self.onmessage = function (e) {
+  var q = e.data, D = SIM.DEB[q.debris];
+  function run(deg, rpm) { return SIM.evaluate({ deb: D, beta: deg * Math.PI / 180, omega: rpm * 2 * Math.PI / 60, mode: q.mode, ribs: q.ribs, level: q.level, fMul: q.fMul, wMul: q.wMul }, 3); }
+  // 1) 현재 회전수 먼저
+  q.angs.forEach(function (deg, i) { self.postMessage({ kind: "now", i: i, r: run(deg, q.rpm) }); });
+  // 2) 그래프
+  q.rpms.forEach(function (n, k) { q.angs.forEach(function (deg, i) { self.postMessage({ kind: "curve", i: i, k: k, r: n === 0 ? { eta: 0, reached: 0, n: 3, zmax: 0 } : run(deg, n) }); }); });
+  self.postMessage({ kind: "done" });
+};`;
+const workerURL = URL.createObjectURL(new Blob([workerSrc], { type: "text/javascript" }));
+let worker = null, jobTimer = null;
+const RPMS = Array.from({ length: 25 }, (_, i) => i * 25);
+let curves = [[], [], []], nowRes = [null, null, null], doneCount = 0;
+function startJob() {
+  if (worker) worker.terminate();
+  curves = [[], [], []]; nowRes = [null, null, null]; doneCount = 0;
+  updateResults(); drawChart();
+  worker = new Worker(workerURL);
+  const myRpm = state.rpm;
+  worker.onmessage = (e) => {
+    const m = e.data;
+    if (m.kind === "now") { nowRes[m.i] = m.r; updateResults(); drawChart(); }
+    else if (m.kind === "curve") { curves[m.i][m.k] = m.r; doneCount++; if (doneCount % 3 === 0) drawChart(); }
+    else if (m.kind === "done") { drawChart(); }
+  };
+  worker.postMessage({ debris: state.debris, mode: state.mode, ribs: state.ribs, level: LEVEL, fMul: state.fMul, wMul: state.wMul, rpm: myRpm, rpms: RPMS, angs: ANG });
+}
+function scheduleJob(delay = 160) { clearTimeout(jobTimer); jobTimer = setTimeout(startJob, delay); }
+
+// ================= 3D 실험대 =================
+const canvas = document.getElementById("c"), stage = document.getElementById("stage");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.localClippingEnabled = true;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 1, 5000);
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f94, 1.7));
+const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(300, 600, 500); scene.add(sun);
+function themeBg() { scene.background = new THREE.Color(cssVar("--view") || "#e4e9ec"); }
+themeBg();
+const onTheme = () => { themeBg(); drawChart(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", onTheme);
+new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const G = SIM.GEO, MM = 1000;
+const L = G.L * MM, RO = 20, RI = G.RI * MM, S_RI = G.ri * MM, S_P = G.p * MM, S_T = G.t * MM;
+const ground = new THREE.Mesh(new THREE.BoxGeometry(760, 6, 260), new THREE.MeshStandardMaterial({ color: 0xb9c0c6, roughness: 0.9 }));
+ground.position.set(40, -3, 0); scene.add(ground);
+
+function helixGeo(ro) {
+  const z0 = -2 * S_P, z1 = L + 2 * S_P, turns = (z1 - z0) / S_P, n = Math.round(turns * 56), pos = [], idx = [];
+  for (let i = 0; i <= n; i++) {
+    const k = i / n, u = 2 * Math.PI * turns * k, z = z0 + (z1 - z0) * k, th = -u, c = Math.cos(th), s = Math.sin(th);
+    for (const [r, dz] of [[S_RI, -S_T / 2], [ro, -S_T / 2], [ro, S_T / 2], [S_RI, S_T / 2]]) pos.push(r * c, r * s, z + dz);
+  }
+  for (let i = 0; i < n; i++) { const a = 4 * i, b = 4 * (i + 1);
+    for (let j = 0; j < 4; j++) { const j2 = (j + 1) % 4; idx.push(a + j, b + j, b + j2, a + j, b + j2, a + j2); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+const HELIX = { off: helixGeo(G.ro * MM), on: helixGeo((G.RI - G.ribH - 0.0002) * MM) };
+
+const N_PCS = 5;
+const rigs = ANG.map((deg, i) => {
+  const beta = deg * Math.PI / 180;
+  const base = new THREE.Vector3([-210, -10, 190][i], 8, 0);
+  const a = new THREE.Vector3(Math.cos(beta), Math.sin(beta), 0);
+  const b = new THREE.Vector3(Math.sin(beta), -Math.cos(beta), 0);    // 관 단면의 '아래' = 모델의 X
+  const c = new THREE.Vector3().crossVectors(a, b);
+  const grp = new THREE.Group(); grp.position.copy(base);
+  grp.setRotationFromMatrix(new THREE.Matrix4().makeBasis(b, c, a)); scene.add(grp);
+  const color = new THREE.Color(cssVar(COLV[i]));
+  const tubeM = new THREE.MeshStandardMaterial({ color: 0xcfe8f7, transparent: true, opacity: 0.26, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false });
+  const tg = new THREE.LatheGeometry([new THREE.Vector2(RI, 0), new THREE.Vector2(RO, 0), new THREE.Vector2(RO, L), new THREE.Vector2(RI, L), new THREE.Vector2(RI, 0)], 48); tg.rotateX(Math.PI / 2);
+  grp.add(new THREE.Mesh(tg, tubeM));
+  const ringM = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+  for (const z of [0, L - 4]) { const rg = new THREE.LatheGeometry([new THREE.Vector2(RO, 0), new THREE.Vector2(RO + 3, 0), new THREE.Vector2(RO + 3, 4), new THREE.Vector2(RO, 4)], 48); rg.rotateX(Math.PI / 2); rg.translate(0, 0, z); grp.add(new THREE.Mesh(rg, ringM)); }
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(RO, RO, 2, 40).rotateX(Math.PI / 2).translate(0, 0, -1), new THREE.MeshStandardMaterial({ color: 0x8d969e }));
+  grp.add(cap);
+  const ribs = new THREE.Group(); grp.add(ribs);
+  const ribM = new THREE.MeshStandardMaterial({ color: 0x7fa6c4, roughness: 0.4 });
+  for (let k = 0; k < 3; k++) { const rb = new THREE.BoxGeometry(G.ribH * MM, G.ribW * MM, L - 6); rb.translate(RI - G.ribH * MM / 2, 0, L / 2); rb.rotateZ(0.5 + k * 2 * Math.PI / 3); ribs.add(new THREE.Mesh(rb, ribM)); }
+  // 물: 세계 높이 기준으로 자르기
+  const wPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), base.y + LEVEL * MM);
+  const waterM = new THREE.MeshStandardMaterial({ color: 0x4a90d9, transparent: true, opacity: 0.2, depthWrite: false, clippingPlanes: [] });
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(RI - 0.4, RI - 0.4, L - 2, 32).rotateX(Math.PI / 2).translate(0, 0, L / 2), waterM);
+  grp.add(water);
+  const planes = [new THREE.Plane(), new THREE.Plane()];
+  const screwM = new THREE.MeshStandardMaterial({ color: 0xf1c98f, roughness: 0.5, side: THREE.DoubleSide, clippingPlanes: planes });
+  const screw = new THREE.Mesh(HELIX.off, screwM); grp.add(screw);
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(70, 8, 70), new THREE.MeshStandardMaterial({ color: 0x8d969e, roughness: 0.8 }));
+  stand.position.set(base.x, 4, 0); scene.add(stand);
+  const pcs = [];
+  for (let k = 0; k < N_PCS; k++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4a2f12, roughness: 0.8, emissive: 0x220000 }));
+    grp.add(m); pcs.push(m);
+  }
+  return { deg, beta, grp, a, base, screw, planes, ribs, water, waterM, wPlane, pcs, list: [], phi: 0, lifted: 0, t: 0 };
+});
+
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function spawnOne(rg) { const s = SIM.spawn(P(rg.deg), (rnd() - 0.5) * 1.2, rnd()); s.z += rnd() * 0.012; return s; }
+function resetPieces() {
+  const d = SIM.DEB[state.debris];
+  const sc = Math.max(1, 6 / Math.max(...d.dims));          // 아주 작은 조각은 보기 쉽게 키움
+  for (const rg of rigs) {
+    rg.phi = 0; rg.lifted = 0; rg.list = [];
+    for (let k = 0; k < N_PCS; k++) { const s = spawnOne(rg); s.z += k * 0.022; rg.list.push(s); }
+    rg.pcs.forEach((m) => { m.material.color.setHex(d.color); m.scale.set(d.dims[0] * sc, d.dims[1] * sc, Math.max(1.2, d.dims[2]) * sc); });
+    rg.screw.geometry = state.ribs ? HELIX.on : HELIX.off;
+    rg.ribs.visible = state.ribs;
+    rg.water.visible = state.mode !== "air";
+    rg.waterM.clippingPlanes = state.mode === "mixed" ? [rg.wPlane] : [];
+    rg.waterM.needsUpdate = true;
+  }
+}
+
+// ================= 화면 갱신 =================
+const labelsEl = document.getElementById("labels"), resEl = document.getElementById("res");
+rigs.forEach((rg, i) => {
+  const d = document.createElement("div"); d.className = "tlabel";
+  d.innerHTML = `<span class="a" style="color:var(${COLV[i]})">${rg.deg}°</span><span class="pill"></span><span class="cnt"></span>`;
+  labelsEl.appendChild(d); rg.label = d;
+  const c = document.createElement("div"); c.className = "rc";
+  c.innerHTML = `<span class="ang" style="color:var(${COLV[i]})">${rg.deg}°</span><span class="meta"></span><span class="pill"></span>`;
+  resEl.appendChild(c); rg.card = c;
+});
+function updateResults() {
+  rigs.forEach((rg, i) => {
+    const r = nowRes[i], [txt, cls] = status(r);
+    for (const el of [rg.card.querySelector(".pill"), rg.label.querySelector(".pill")]) { el.textContent = txt; el.className = "pill " + cls; }
+    rg.card.querySelector(".meta").textContent = r ? `효율 ${Math.max(0, Math.round(r.eta * 100))}% · ${Math.max(0, r.eta * S_P * state.rpm / 60).toFixed(0)} mm/s\n도달 ${r.reached}/${r.n} · 최고 ${Math.round(r.zmax * MM)} mm` : "…";
+    rg.card.querySelector(".meta").style.whiteSpace = "pre-line";
+  });
+  const v = nowRes[0], e = document.getElementById("explain");
+  if (!v) { e.textContent = "계산 중…"; return; }
+  if (state.rpm === 0) { e.textContent = "스크류가 멈춰 있다."; return; }
+  const air = state.mode !== "water", v45 = nowRes[2];
+  if (v45 && v45.reached < v45.n && state.fMul === 1 && !state.ribs) { e.textContent = "45°에서도 일부가 날개에 붙어 같이 돈다. 날개(PLA)와 관 벽(아크릴)의 마찰이 비슷해서다. 날개를 매끈하게 하거나 리브를 넣어 보자."; return; }
+  if (v.reached === v.n) e.textContent = state.ribs
+    ? "리브가 쓰레기가 같이 도는 것을 막아, 날개가 쓰레기 밑으로 계속 파고든다. 기울인 스크류에서 바닥이 하던 역할을 리브가 한다."
+    : "수직에서도 올라간다. 원심력으로 관 벽에 눌린 쓰레기를 벽 마찰이 붙잡아, 날개가 그 밑으로 파고든다.";
+  else if (state.mode === "mixed" && v.zmax > LEVEL * 0.8) e.textContent = "물속에서는 올라오다가 수면 위에서 멈춘다. 물의 저항과 부력이 사라지면서 쓰레기가 날개와 같이 돌기 시작한다. 실제 장치에서 가장 위험한 구간이다.";
+  else e.textContent = air
+    ? "수직에서는 원심력이 약해 관 벽이 쓰레기를 붙잡지 못하고, 쓰레기가 날개와 같이 돌기만 한다. 회전수를 올리거나 리브를 넣어 보자."
+    : "물속에서도 무거운 쓰레기는 날개와 같이 돈다. 회전수를 올리거나 리브를 넣어 보자.";
+}
+function drawChart() {
+  const svg = document.getElementById("chart");
+  const W = Math.max(520, svg.clientWidth || 700), H = 200, ml = 54, mr = 64, mt = 10, mb = 30;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W);
+  const yMin = 0, yMax = 1.0;
+  const X = (n) => ml + (n / 600) * (W - ml - mr), Y = (e) => mt + (1 - (Math.max(yMin, Math.min(yMax, e)) - yMin) / (yMax - yMin)) * (H - mt - mb);
+  const ink = cssVar("--ink"), mut = cssVar("--muted"), line = cssVar("--line"), pan = cssVar("--panel");
+  let s = "";
+  for (const e of [0, 0.25, 0.5, 0.75, 1]) {
+    s += `<line x1="${ml}" x2="${W - mr}" y1="${Y(e)}" y2="${Y(e)}" stroke="${e === 0 ? mut : line}" stroke-width="${e === 0 ? 1.4 : 1}"/>`;
+    s += `<text x="${ml - 8}" y="${Y(e) + 4}" text-anchor="end" font-size="11" fill="${mut}">${Math.round(e * 100)}%</text>`;
+  }
+  for (const n of [0, 100, 200, 300, 400, 500, 600]) s += `<text x="${X(n)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="${mut}">${n}</text>`;
+  s += `<text x="${W - mr + 22}" y="${H - 10}" font-size="11" fill="${mut}">rpm</text>`;
+  s += `<rect x="${X(370)}" y="${mt}" width="${X(430) - X(370)}" height="${H - mt - mb}" fill="${mut}" opacity="0.08"/>`;
+  s += `<text x="${X(400)}" y="${mt + 12}" text-anchor="middle" font-size="10.5" fill="${mut}">모형 모터</text>`;
+  const cols = COLV.map(cssVar), ends = [];
+  curves.forEach((cv, i) => {
+    const pts = []; for (let k = 0; k < RPMS.length; k++) { if (!cv[k]) break; pts.push([X(RPMS[k]), Y(cv[k].eta), cv[k]]); }
+    if (pts.length > 1) s += `<path d="${pts.map((p, k) => `${k ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("")}" fill="none" stroke="${cols[i]}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    for (const p of pts) if (p[2].reached < p[2].n && RPMS[pts.indexOf(p)] > 0) s += `<circle cx="${p[0]}" cy="${p[1]}" r="2.6" fill="${pan}" stroke="${cols[i]}" stroke-width="1.4"/>`;
+    if (pts.length) ends.push([pts[pts.length - 1][0], pts[pts.length - 1][1], i]);
+  });
+  // 끝 라벨 (겹치면 벌리기)
+  ends.sort((a, b) => a[1] - b[1]); for (let k = 1; k < ends.length; k++) if (ends[k][1] - ends[k - 1][1] < 14) ends[k][1] = ends[k - 1][1] + 14;
+  for (const [x, y, i] of ends) s += `<text x="${x + 6}" y="${y + 4}" font-size="12" font-weight="700" fill="${cols[i]}">${ANG[i]}°</text>`;
+  s += `<line x1="${X(state.rpm)}" x2="${X(state.rpm)}" y1="${mt}" y2="${H - mb}" stroke="${ink}" stroke-dasharray="3 3" stroke-width="1.2"/>`;
+  nowRes.forEach((r, i) => { if (r) s += `<circle cx="${X(state.rpm)}" cy="${Y(r.eta)}" r="4.5" fill="${cols[i]}" stroke="${pan}" stroke-width="1.5"/>`; });
+  svg.innerHTML = s;
+  const total = RPMS.length * 3, done = curves.reduce((a, c) => a + c.filter(Boolean).length, 0);
+  document.getElementById("prog").textContent = done < total ? `계산 중 ${Math.round(done / total * 100)}%` : "";
+}
+new ResizeObserver(drawChart).observe(document.querySelector(".chartbox"));
+
+// ================= 조작 =================
+const rpmEl = document.getElementById("rpm"), rpmV = document.getElementById("rpm-v");
+rpmEl.addEventListener("input", () => { state.rpm = +rpmEl.value; rpmV.textContent = state.rpm; nowRes = [null, null, null]; updateResults(); drawChart(); scheduleNow(); });
+// 회전수만 바뀌면 그래프는 그대로 두고 현재 값만 다시 계산
+let nowWorker = null, nowTimer = null;
+function scheduleNow() {
+  clearTimeout(nowTimer);
+  nowTimer = setTimeout(() => {
+    if (nowWorker) nowWorker.terminate();
+    nowWorker = new Worker(workerURL);
+    nowWorker.onmessage = (e) => { if (e.data.kind === "now") { nowRes[e.data.i] = e.data.r; updateResults(); drawChart(); } if (e.data.kind === "curve") nowWorker.terminate(); };
+    nowWorker.postMessage({ debris: state.debris, mode: state.mode, ribs: state.ribs, level: LEVEL, fMul: state.fMul, wMul: state.wMul, rpm: state.rpm, rpms: [], angs: ANG });
+  }, 150);
+}
+const dSel = document.getElementById("debris");
+for (const [k, d] of Object.entries(SIM.DEB)) { const o = document.createElement("option"); o.value = k; o.textContent = d.name; dSel.appendChild(o); }
+function showSpec() {
+  const d = SIM.DEB[state.debris];
+  document.getElementById("dspec").textContent = `${d.dims.join(" × ")} mm · 밀도 ${d.rho} · ${(d.m * 1e6).toFixed(0)} mg · 벽 마찰 ${d.muW[1]}${d.Lmax < 2 * SIM.GEO.ri ? " · 가운데 구멍 통과 가능" : ""}`;
+}
+dSel.addEventListener("change", () => { state.debris = dSel.value; showSpec(); refresh(); });
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => {
+  state.mode = b.dataset.mode;
+  document.querySelectorAll("[data-mode]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  document.getElementById("mode-note").textContent = MODE_NOTE[state.mode];
+  refresh();
+}));
+function setRibs(on) {
+  state.ribs = on;
+  document.getElementById("r-off").setAttribute("aria-pressed", !on);
+  document.getElementById("r-on").setAttribute("aria-pressed", on);
+  refresh();
+}
+document.getElementById("r-off").addEventListener("click", () => setRibs(false));
+document.getElementById("r-on").addEventListener("click", () => setRibs(true));
+function setSurf(kind, val) {
+  if (kind === "f") { state.fMul = val; document.getElementById("f-raw").setAttribute("aria-pressed", val === 1); document.getElementById("f-smooth").setAttribute("aria-pressed", val !== 1); }
+  else { state.wMul = val; document.getElementById("w-raw").setAttribute("aria-pressed", val === 1); document.getElementById("w-rough").setAttribute("aria-pressed", val !== 1); }
+  refresh();
+}
+document.getElementById("f-raw").addEventListener("click", () => setSurf("f", 1));
+document.getElementById("f-smooth").addEventListener("click", () => setSurf("f", 0.6));
+document.getElementById("w-raw").addEventListener("click", () => setSurf("w", 1));
+document.getElementById("w-rough").addEventListener("click", () => setSurf("w", 1.4));
+document.querySelectorAll("[data-slow]").forEach((b) => b.addEventListener("click", () => {
+  state.slow = +b.dataset.slow;
+  document.querySelectorAll("[data-slow]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  document.getElementById("slowtag").textContent = `화면은 실제의 ${b.textContent} 속도`;
+}));
+function refresh() { resetPieces(); scheduleJob(); }
+
+// ================= 애니메이션 =================
+const tmp = new THREE.Vector3(), q = new THREE.Quaternion(), e3 = new THREE.Euler();
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+camera.position.set(60, 330, 820); controls.target.set(40, 95, 0);
+
+let last = performance.now();
+function loop(t) {
+  const real = Math.min(0.05, (t - last) / 1000); last = t;
+  const nSteps = Math.max(1, Math.round(real * state.slow / SIM.DT));
+  const omega = state.rpm * 2 * Math.PI / 60;
+  for (const rg of rigs) {
+    const p = P(rg.deg);
+    for (let k = 0; k < nSteps; k++) { SIM.stepAll(rg.list, p, rg.phi, SIM.DT); rg.phi += omega * SIM.DT; }
+    rg.screw.rotation.z = rg.phi;
+    rg.grp.updateMatrixWorld(true);
+    rg.planes[0].setFromNormalAndCoplanarPoint(rg.a, rg.grp.localToWorld(new THREE.Vector3(0, 0, 1)));
+    rg.planes[1].setFromNormalAndCoplanarPoint(rg.a.clone().negate(), rg.grp.localToWorld(new THREE.Vector3(0, 0, L - 1)));
+    rg.list.forEach((s, k) => {
+      if (s.z * MM > L - 6) { rg.lifted++; rg.list[k] = spawnOne(rg); }
+      else if (!isFinite(s.z) || s.z < -0.01) rg.list[k] = spawnOne(rg);
+      const ss = rg.list[k], m = rg.pcs[k], th = Math.atan2(ss.y, ss.x);
+      m.position.set(ss.x * MM, ss.y * MM, ss.z * MM);
+      m.rotation.set(0.24 * Math.sin(th), -0.24 * Math.cos(th), th + Math.PI / 2);
+    });
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  for (const rg of rigs) {
+    rg.grp.localToWorld(tmp.set(0, 0, L + 18)); tmp.y += 14; tmp.project(camera);
+    const vis = tmp.z < 1; rg.label.hidden = !vis;
+    if (vis) { rg.label.style.left = ((tmp.x + 1) / 2 * stage.clientWidth) + "px"; rg.label.style.top = ((1 - tmp.y) / 2 * stage.clientHeight) + "px"; }
+    rg.label.querySelector(".cnt").textContent = `올라간 조각 ${rg.lifted}`;
+  }
+  requestAnimationFrame(loop);
+}
+document.getElementById("mode-note").textContent = MODE_NOTE.air;
+showSpec(); resetPieces(); startJob();
+requestAnimationFrame(loop);
+window.__ready = true;
+</script>
+
+</body></html>
